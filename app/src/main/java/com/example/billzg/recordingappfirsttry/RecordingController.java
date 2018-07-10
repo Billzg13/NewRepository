@@ -3,7 +3,6 @@ package com.example.billzg.recordingappfirsttry;
 import android.content.Context;
 import android.media.MediaRecorder;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -11,7 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.support.v4.app.Fragment;
 import android.widget.Button;
-import android.widget.TextView;
+import android.widget.Toast;
 
 public class RecordingController extends Fragment{
     private static final String TAG = "RecordingController";
@@ -30,7 +29,7 @@ public class RecordingController extends Fragment{
 
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(final LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.recording_area, container, false);
 
         dbHelper = new DBHelper(v.getContext(), null, null, 1);
@@ -42,12 +41,32 @@ public class RecordingController extends Fragment{
         startRec.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //changes the fileName so its unique
-                finalName = ChangeFileName(fileName, getContext());
-                //starts recording to that unique file
-                StartRecording(finalName);
-                //also set the stop Button to enabled
-                stopRec.setEnabled(true);
+                //startFragment
+                //onReturn of fragment the name is back Via interface if the name doesn't already exist in the DB then we save it or we ask for another name
+                CustomNameFragmentController myDialog = new CustomNameFragmentController();
+                Log.d(TAG, "onClick: myDialog.interface? value: "+myDialog.mOnInputListener);
+                myDialog.show(getActivity().getSupportFragmentManager(), "my custom dialog");
+
+                myDialog.mOnInputListener = new CustomNameFragmentController.OnInputListener() {
+                    @Override
+                    public void onReturnInput(String input) { //always have to initialize the interface within the onClick view's
+                        Log.d(TAG, "onReturnInput: it coems here?");
+                        Toast.makeText(getContext(), "it works? :"+input, Toast.LENGTH_SHORT).show();
+                        fileName = "/"+input+".3gp";
+                        //checkName here?
+                        if (dbHelper.isAvailable(fileName)) {
+                            finalName = getContext().getFilesDir().getAbsolutePath();
+                            finalName += fileName;
+                            StartRecording(finalName);
+                            stopRec.setEnabled(true);
+                        }else {
+                            Toast.makeText(getContext(), "Name already exists", Toast.LENGTH_LONG).show();
+                        }
+                        Log.d(TAG, "onClick: finalName is :"+finalName);
+
+                    }
+                };
+
             }
         });
 
@@ -56,11 +75,14 @@ public class RecordingController extends Fragment{
             @Override
             public void onClick(View v) {
                 //onStopButtonPressed it saves the recording in the database
+
+
                 mediaRecorder.stop();
                 mediaRecorder.reset();
                 stopRec.setEnabled(false);
-                Log.d(TAG, "onClick: extensions value is : "+extension);
-                dbHelper.SaveRecInDb(extension);
+                Log.d(TAG, "onClick: extensions value is : "+fileName);
+
+                dbHelper.SaveRecInDb(fileName);
             }
         });
 
@@ -84,23 +106,6 @@ public class RecordingController extends Fragment{
         //finally start recording
         mediaRecorder.start();
 
-    }
-
-
-    private String ChangeFileName(String fileName, Context v) {
-        int fileNum = dbHelper.getLatestSize();
-        fileNum++;
-        Log.d(TAG, "changeFileName: started fileNum is : "+fileNum);
-
-        baseNamet = v.getFilesDir().getAbsolutePath();
-        extension = "/myRecording"+fileNum+".3gp";
-
-        fileName = v.getFilesDir().getAbsolutePath();
-        //fileName = getExternalCacheDir().getAbsolutePath();
-        fileName += "/myRecording"+fileNum+".3gp";
-        Log.d(TAG, "at end of ChangeFileName: filename is :"+fileName);
-
-        return fileName;
     }
 
 }

@@ -7,7 +7,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.ResourceBundle;
 
 public class DBHelper extends SQLiteOpenHelper {
     private static final String TAG = "DBHelper";
@@ -18,8 +20,11 @@ public class DBHelper extends SQLiteOpenHelper {
             "_id integer primary key autoincrement," +
             "name text);";
 
+    Context context ;
+
     public DBHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
         super(context, DATABASE_NAME, factory, DATABASE_VERSION);
+        this.context = context;
     }
 
     @Override
@@ -88,4 +93,40 @@ public class DBHelper extends SQLiteOpenHelper {
         return returnArrayList;
     }
 
+    public void deleteRec(String recName) {
+        //this works but it overwrites the last file
+        Log.d(TAG, "deleteRec: on "+recName);
+        //delete the entry from the DB and the file
+        SQLiteDatabase db = getWritableDatabase();
+        db.delete("recs","name=?",new String[]{recName});
+        db.close();
+
+        String root = context.getFilesDir().getAbsolutePath();
+        root += recName;
+        File file = new File(root);
+
+        if (file.exists()) {
+            if (file.delete()) {
+                System.out.println("file Deleted :" + root);
+            } else {
+                System.out.println("file not Deleted :" + root);
+            }
+        }
+    }
+
+    public boolean isAvailable(String fileName) {
+        Log.d(TAG, "isAvailable: on "+fileName);
+        SQLiteDatabase db = getWritableDatabase();
+        Cursor c ;
+
+        c = db.rawQuery("SELECT count(*) from recs where name = ?" ,new String[]{fileName});
+        c.moveToFirst();
+        int count = c.getInt(c.getColumnIndex("count(*)"));
+        if (count == 0){
+            return true; //return true if there is no entry same as fileName
+        }else {
+            return false; //return false if there is an entry same as fileName
+        }
+
+    }
 }

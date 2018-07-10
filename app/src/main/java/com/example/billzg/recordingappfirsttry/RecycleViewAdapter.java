@@ -24,10 +24,12 @@ public class RecycleViewAdapter extends RecyclerView.Adapter<RecycleViewAdapter.
     private Context mContext;
     private ArrayList<String> mRecName = new ArrayList<>();
     MediaPlayer mediaPlayer;
+    private DBHelper dbHelper;
 
     public RecycleViewAdapter(Context mContext, ArrayList<String> mRecName) {
         this.mContext = mContext;
         this.mRecName = mRecName;
+        dbHelper = new DBHelper(mContext, null, null, 1);
     }
 
     @NonNull
@@ -60,6 +62,13 @@ public class RecycleViewAdapter extends RecyclerView.Adapter<RecycleViewAdapter.
             }
         });
 
+        holder.buttonForDelete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //extension Gets passed
+                dbHelper.deleteRec(mRecName.get(position).toString());
+            }
+        });
     }
 
 
@@ -74,6 +83,7 @@ public class RecycleViewAdapter extends RecyclerView.Adapter<RecycleViewAdapter.
         TextView recTxt;
         Button buttonForPlay;
         Button buttonForStop;
+        Button buttonForDelete;
 
         public ViewHolder(View itemView) {
             super(itemView);
@@ -81,6 +91,7 @@ public class RecycleViewAdapter extends RecyclerView.Adapter<RecycleViewAdapter.
             parentLayout = itemView.findViewById(R.id.parentLayoutXml);
             buttonForPlay = itemView.findViewById(R.id.buttonPlay);
             buttonForStop = itemView.findViewById(R.id.buttonStop);
+            buttonForDelete = itemView.findViewById(R.id.buttonDelete);
         }
     }
 

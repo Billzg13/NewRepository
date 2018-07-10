@@ -5,4 +5,6 @@
     <string name="record">Rec</string>
     <string name="play_button">Play</string>
     <string name="stop_button">Stop</string>
+    <string name="delete_button">delete</string>
+    <string name="save_as">save as...</string>
 </resources>
